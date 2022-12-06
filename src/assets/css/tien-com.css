@@ -1,0 +1,9 @@
+.paid {
+    color: green;
+    font-weight: bold;
+    text-align: center;
+}
+
+.not-pay {
+    text-align: center;
+}
