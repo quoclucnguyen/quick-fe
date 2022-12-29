@@ -18,7 +18,7 @@ import axios, { AxiosError, AxiosInstance } from "axios";
 import { Modal } from "antd";
 import localForage from "localforage";
 import UserPage from "./routes/user/user-page";
-import { UserProPage } from "./routes/user/user-pro-page";
+import ErrorPage from "./ErrorPage";
 
 export interface UserLogin {
   id: number;
@@ -186,7 +186,11 @@ function App() {
             <Route element={<LoginLayout />} path={"/login"}>
               <Route index element={<LoginPage />} />
             </Route>
-            <Route element={<MainLayout />} path={"/"}>
+            <Route
+              element={<MainLayout />}
+              path={"/"}
+              errorElement={<ErrorPage />}
+            >
               <Route
                 index
                 element={
@@ -200,14 +204,6 @@ function App() {
                 element={
                   <RequireAuth>
                     <UserPage />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path={"user-pro"}
-                element={
-                  <RequireAuth>
-                    <UserProPage />
                   </RequireAuth>
                 }
               />
