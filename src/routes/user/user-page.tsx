@@ -1,14 +1,39 @@
 import {
+  CheckCircleFilled,
+  DeleteColumnOutlined,
+  DeleteFilled,
+  DeleteOutlined,
+  EditFilled,
+  EditOutlined,
   LoadingOutlined,
   PlusCircleOutlined,
   ReloadOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import { Card } from "@nextui-org/react";
-import { Form, Input, Row, Col, Button, Table, Modal, Select } from "antd";
+import {
+  Form,
+  Input,
+  Row,
+  Col,
+  Button,
+  Table,
+  Modal,
+  Select,
+  Switch,
+  Space,
+  Tag,
+  Popconfirm,
+} from "antd";
 import { useEffect, useState } from "react";
 import { useApp } from "../../App";
 import { faker } from "@faker-js/faker";
+import FormBuilder from "../../components/Form";
+import {
+  FormBuilderPropertyInterface,
+  PropertyType,
+} from "../../components/interface";
+import axios from "axios";
 
 interface User {
   id: number;
@@ -41,6 +66,10 @@ export default function UserPage() {
   const [isLoadingData, setIsLoadingData] = useState<boolean>(false);
   const [isModalAddUserOpen, setIsModalAddUserOpen] = useState(false);
   const [createUserForm] = Form.useForm();
+  const [updateUserForm] = Form.useForm();
+  const [isModalUpdateUserOpen, setIsModalUpdateUserOpen] =
+    useState<boolean>(false);
+  const [edittingUser, setEdittingUser] = useState<User | null>(null);
 
   const handleSearch = (values: { username?: string; name?: string }) => {
     const value = {
@@ -78,6 +107,11 @@ export default function UserPage() {
   }) => {
     const result = await app.axiosPost("users", values);
     if (result) {
+      app.showAlert({
+        type: "success",
+        title: "Thêm user thành công",
+      });
+      createUserForm.resetFields();
       const value = {
         username: null,
         name: null,
@@ -98,6 +132,55 @@ export default function UserPage() {
       role: "USER",
     });
   };
+
+  const handleBtnEditUserClick = (record: User) => {
+    console.log(record);
+    setEdittingUser(record);
+    updateUserForm.setFieldsValue({
+      id: record.id,
+      name: record.name,
+      username: record.username,
+      isActive: record.isActive,
+      role: record.role,
+    });
+    setIsModalUpdateUserOpen(true);
+  };
+
+  const handleEditUserFormFinish = async (values: {
+    username: string;
+    name: string;
+    role: string;
+    isActive: boolean;
+    password: string;
+    id: number;
+  }) => {
+    const result = await app.axiosPatch("/users", values);
+    if (result) {
+      app.showAlert({
+        type: "success",
+        title: "Update thông tin thành công",
+      });
+      updateUserForm.resetFields();
+      setEdittingUser(null);
+      setIsModalUpdateUserOpen(false);
+      getData(filter);
+    }
+  };
+
+  const handleDeleteConfirm = async (record: User) => {
+    const result = await app.axiosPatch("/users", {
+      id: record.id,
+      isActive: false,
+    });
+    if (result) {
+      app.showAlert({
+        type: "success",
+        title: "Xóa thành công",
+      });
+      getData(filter);
+    }
+  };
+
   return (
     <>
       <Card css={{ padding: "1rem 1rem 0rem 1rem" }}>
@@ -197,14 +280,41 @@ export default function UserPage() {
               dataIndex: "isActive",
               render: (value: boolean) => {
                 if (value) {
-                  return <>true</>;
+                  return (
+                    <Tag color="green" icon={<CheckCircleFilled />}>
+                      Active
+                    </Tag>
+                  );
                 }
-                return <>false</>;
+                return (
+                  <Tag color="red" icon={<DeleteFilled />}>
+                    Delete
+                  </Tag>
+                );
               },
             },
             {
-              render: () => {
-                return <></>;
+              render: (_, record) => {
+                return (
+                  <Space>
+                    <Button
+                      icon={<EditOutlined />}
+                      onClick={() => {
+                        handleBtnEditUserClick(record);
+                      }}
+                    />
+                    <Popconfirm
+                      title={`Xóa user: ${record.name}`}
+                      onConfirm={() => {
+                        handleDeleteConfirm(record);
+                      }}
+                      okText="Xóa"
+                      cancelText="Hủy"
+                    >
+                      <Button icon={<DeleteFilled />} danger />
+                    </Popconfirm>
+                  </Space>
+                );
               },
             },
           ]}
@@ -269,6 +379,66 @@ export default function UserPage() {
         >
           Test User
         </Button>
+      </Modal>
+      <Modal
+        title={`Cập nhật thông tin user: ${edittingUser?.name} _ ID: ${edittingUser?.id}`}
+        open={isModalUpdateUserOpen}
+        onCancel={() => {
+          setIsModalUpdateUserOpen(false);
+          updateUserForm.resetFields();
+          setEdittingUser(null);
+        }}
+        footer={false}
+      >
+        <Form
+          onFinish={handleEditUserFormFinish}
+          layout={"vertical"}
+          name={"updateUser"}
+          form={updateUserForm}
+        >
+          <Form.Item name={"id"} hidden={true}>
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label={"Username"}
+            name={"username"}
+            rules={[{ required: true }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label={"Name"} name={"name"} rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item label={"Password"} name={"password"}>
+            <Input.Password autoComplete="false" />
+          </Form.Item>
+          <Form.Item name={"role"} label={"Role"}>
+            <Select
+              options={[
+                {
+                  value: "USER",
+                  label: "USER",
+                },
+                {
+                  value: "ADMIN",
+                  label: "ADMIN",
+                },
+                {
+                  value: "SA",
+                  label: "SA",
+                },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item label={"Active"} name={"isActive"} valuePropName="checked">
+            <Switch />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
+              Lưu
+            </Button>
+          </Form.Item>
+        </Form>
       </Modal>
     </>
   );

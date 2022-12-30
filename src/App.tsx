@@ -99,6 +99,8 @@ export interface AppContexType {
   showAlert: (alert: AlertType) => void;
   axiosGet<E, P>(url: string, params: P): Promise<E | E[] | void>;
   axiosPost<E, P>(url: string, body: P): Promise<E | E[] | void>;
+  axiosPatch<E, P>(url: string, body: P): Promise<E | E[] | void>;
+  axiosDelete<E>(url: string): Promise<E | E[] | void>;
 }
 
 const AppContext = createContext<AppContexType>(null!);
@@ -124,50 +126,76 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
       case "error":
         modal.error(config);
         break;
+      case "success":
+        modal.success(config);
+        break;
       default:
     }
   };
+
+  const catchAxiosError = (error: AxiosError) => {
+    console.log(error);
+    const data = error.response?.data as unknown as any;
+    switch (error?.response?.status) {
+      case 401:
+        modal.error({
+          title: error.code,
+          content: data?.message,
+          onOk: () => {
+            auth.signout(() => {});
+          },
+        });
+        break;
+      case 400:
+        modal.error({
+          title: error.code,
+          content: data?.message,
+        });
+
+      default:
+    }
+  };
+
   function axiosGet<E, P>(url: string, params: P) {
     return axiosInsance
       .get<E>(url, { params: params })
       .then((result) => {
-        console.log(result);
         return result.data;
       })
-      .catch((error: AxiosError) => {
-        console.log(error);
-        if (error?.response?.status == 401) {
-          modal.error({
-            title: error.code,
-            content: error.message,
-            onOk: () => {
-              auth.signout(() => {});
-            },
-          });
-        }
-      });
+      .catch(catchAxiosError);
   }
   function axiosPost<E, P>(url: string, body: P) {
     return axiosInsance
       .post<E>(url, body)
       .then((result) => {
-        console.log(result);
         return result.data;
       })
-      .catch((error: AxiosError) => {
-        console.log(error);
-        if (error?.response?.status == 401) {
-          modal.error({
-            title: error.code,
-            content: error.message,
-            onOk: () => {
-              auth.signout(() => {});
-            },
-          });
-        }
-      });
+      .catch(catchAxiosError);
   }
-  const value = { showAlert, axiosInsance, axiosGet, axiosPost };
+  function axiosPatch<E, P>(url: string, body: P) {
+    return axiosInsance
+      .patch<E>(url, body)
+      .then((result) => {
+        return result.data;
+      })
+      .catch(catchAxiosError);
+  }
+  function axiosDelete<E>(url: string) {
+    return axiosInsance
+      .delete<E>(url)
+      .then((result) => {
+        return result.data;
+      })
+      .catch(catchAxiosError);
+  }
+  const value = {
+    showAlert,
+    axiosInsance,
+    axiosGet,
+    axiosPost,
+    axiosPatch,
+    axiosDelete,
+  };
   return (
     <AppContext.Provider value={value}>
       {children}
