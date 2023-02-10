@@ -17,3 +17,8 @@ export const getAppConfig = () => {
     .getItem<AppConfig>(import.meta.env.VITE_APP_NAME + "_config")
     .then((result) => result);
 };
+
+export enum CURD {
+  CREATE = "create",
+  UPDATE = "update",
+}

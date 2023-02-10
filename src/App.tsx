@@ -19,6 +19,7 @@ import { Modal } from "antd";
 import localForage from "localforage";
 import UserPage from "./routes/user/user-page";
 import ErrorPage from "./ErrorPage";
+import { OutletPage } from "./routes/outlet/OutletPage";
 
 export interface UserLogin {
   id: number;
@@ -232,6 +233,14 @@ function App() {
                 element={
                   <RequireAuth>
                     <UserPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path={"outlet"}
+                element={
+                  <RequireAuth>
+                    <OutletPage />
                   </RequireAuth>
                 }
               />

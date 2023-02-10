@@ -40,6 +40,11 @@ const MainLayout = () => {
               icon: <UserOutlined />,
               label: "User",
             },
+            {
+              key: "/outlet",
+              icon: <UserOutlined />,
+              label: "Outlet",
+            },
           ]}
         />
       </Sider>
