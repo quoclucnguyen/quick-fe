@@ -21,7 +21,7 @@ import {
 } from "antd";
 import { useEffect, useState } from "react";
 import { useApp } from "../../App";
-import { CURD } from "../../helper";
+import { CURD, DistrictInterface, ProvinceInterface } from "../../helper";
 
 export interface OutletInterface {
   id: number;
@@ -62,6 +62,9 @@ export function OutletPage() {
   const [modalAddOrUpdateOutletTitle, setModalAddOrUpdateOutletTitle] =
     useState<string>();
   const [formAction, setFormAction] = useState<CURD | null>(null);
+  const [provinces, setProvinces] = useState<ProvinceInterface[]>([]);
+  const [districts, setDistricts] = useState<DistrictInterface[]>([]);
+
   const [addOrUpdateOutletForm] = Form.useForm();
 
   const handleSearch = () => {};
@@ -80,9 +83,43 @@ export function OutletPage() {
   };
   const handleBtnEditOutletClick = ({}) => {};
   const handleBtnDeleteConfirm = ({}) => {};
-  const handleAddOutletFormSubmit = () => {};
+  const handleAddOutletFormSubmit = async () => {
+    await addOrUpdateOutletForm.validateFields();
+    switch (formAction) {
+      case CURD.CREATE:
+        break;
+      case CURD.UPDATE:
+        break;
+      default:
+    }
+  };
+  const getProvince = async () => {
+    const result = await app.axiosGet<ProvinceInterface[], {}>(
+      "/location/province",
+      {}
+    );
+    if (Array.isArray(result)) {
+      setProvinces(result as ProvinceInterface[]);
+    }
+  };
+  const handleSelectProvinceChange = async (value: number) => {
+    const districts = await app.axiosGet<DistrictInterface[], {}>(
+      "/location/district/" + value,
+      {}
+    );
+    if (Array.isArray(districts)) {
+      setDistricts(districts as DistrictInterface[]);
+    }
+  };
+  const handleSelectProvinceSelect = () => {
+    addOrUpdateOutletForm.setFieldsValue({
+      districtId: undefined,
+    });
+  };
+
   useEffect(() => {
     getData(filter);
+    getProvince();
   }, []);
   return (
     <>
@@ -249,34 +286,55 @@ export function OutletPage() {
           form={addOrUpdateOutletForm}
         >
           <Form.Item
-            label={"Username"}
-            name={"username"}
+            label={"Outlet_ID"}
+            name={"code"}
             rules={[{ required: true }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            label={"Password"}
-            name={"password"}
+            label={"Outlet"}
+            name={"outlet"}
             rules={[{ required: true }]}
           >
-            <Input.Password />
-          </Form.Item>
-          <Form.Item label={"Name"} name={"name"} rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item label={"Role"} name={"role"} rules={[{ required: true }]}>
+          <Form.Item
+            label={"Địa chỉ"}
+            name={"address"}
+            rules={[{ required: true }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label={"Tỉnh/Thành phố"}
+            name={"provinceId"}
+            rules={[{ required: true }]}
+          >
             <Select
-              options={[
-                {
-                  value: "USER",
-                  label: "USER",
-                },
-                {
-                  value: "ADMIN",
-                  label: "ADMIN",
-                },
-              ]}
+              showSearch={true}
+              allowClear={true}
+              onChange={handleSelectProvinceChange}
+              onSelect={handleSelectProvinceSelect}
+              filterOption={(input, option) =>
+                (option!.label as unknown as string)
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+              options={provinces.map((province) => {
+                return { label: province.name, value: province.id };
+              })}
+            />
+          </Form.Item>
+          <Form.Item
+            label={"Quận/Huyện"}
+            name={"districtId"}
+            rules={[{ required: true }]}
+          >
+            <Select
+              options={districts.map((district) => {
+                return { label: district.name, value: district.id };
+              })}
             />
           </Form.Item>
           <Form.Item>

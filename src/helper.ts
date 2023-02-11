@@ -22,3 +22,19 @@ export enum CURD {
   CREATE = "create",
   UPDATE = "update",
 }
+
+export interface AbstractEntity {
+  id: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: number;
+}
+
+export interface ProvinceInterface extends AbstractEntity {
+  name: string;
+}
+
+export interface DistrictInterface extends AbstractEntity {
+  name: string;
+}
