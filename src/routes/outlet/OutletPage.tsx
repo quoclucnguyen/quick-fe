@@ -40,15 +40,20 @@ export interface OutletInterface {
 interface Filter {
   name: string | null;
   code: string | null;
+  address: string | null;
+  provinceId: number | null;
   take: number;
   skip: number;
 }
+
 export function OutletPage() {
   const app = useApp();
 
   const [filter, setFilter] = useState<Filter>({
     code: null,
     name: null,
+    address: null,
+    provinceId: null,
     take: 10,
     skip: 0,
   });
@@ -64,10 +69,19 @@ export function OutletPage() {
   const [formAction, setFormAction] = useState<CURD | null>(null);
   const [provinces, setProvinces] = useState<ProvinceInterface[]>([]);
   const [districts, setDistricts] = useState<DistrictInterface[]>([]);
+  const [modalTitle, setModalTitle] = useState<string>('');
 
   const [addOrUpdateOutletForm] = Form.useForm();
 
-  const handleSearch = () => {};
+
+  const handleSearch = (values: { code?: string; name?: string; address?: string; provinceId?: number }) => {
+    const filterSearch: Filter = {
+      ...filter,
+      ...values,
+    }
+    getData(filterSearch);
+  };
+
   const getData = async (filter: Filter) => {
     setIsLoadingData(true);
     const result = await app.axiosGet<
@@ -81,18 +95,55 @@ export function OutletPage() {
     }
     setIsLoadingData(false);
   };
-  const handleBtnEditOutletClick = ({}) => {};
-  const handleBtnDeleteConfirm = ({}) => {};
+
+  const handleBtnEditOutletClick = (record: OutletInterface) => {
+    setFormAction(CURD.UPDATE);
+    setIsModalAddOutletOpen(true);
+    setModalTitle(`Cập nhật thông tin outlet: ${record.code} - ${record.name}`)
+    addOrUpdateOutletForm.setFieldsValue(record);
+    handleSelectProvinceChange(record.province?.id as number);
+  };
+  const handleBtnDeleteConfirm = (record: OutletInterface) => {
+    app.axiosDelete(`/outlets/${record.id}`).then(result => {
+      app.showAlert({
+        type: 'success',
+        message: 'Xóa thành công.'
+      });
+      getData(filter);
+    })
+  };
+
   const handleAddOutletFormSubmit = async () => {
     await addOrUpdateOutletForm.validateFields();
     switch (formAction) {
       case CURD.CREATE:
+        app.axiosPost('/outlets', addOrUpdateOutletForm.getFieldsValue()).then(result => {
+          app.showAlert({
+            type: 'success',
+            message: 'Thêm outlet thành công',
+          })
+          addOrUpdateOutletForm.resetFields();
+          setIsModalAddOutletOpen(false);
+          setModalTitle('');
+          getData(filter);
+        });
         break;
       case CURD.UPDATE:
+        app.axiosPatch(`/outlets/${addOrUpdateOutletForm.getFieldValue('id')}`, addOrUpdateOutletForm.getFieldsValue()).then(result => {
+          app.showAlert({
+            type: 'success',
+            message: 'Cập nhập thông tin outlet thành công',
+          })
+          addOrUpdateOutletForm.resetFields();
+          setIsModalAddOutletOpen(false);
+          setModalTitle('');
+          getData(filter);
+        })
         break;
       default:
     }
   };
+
   const getProvince = async () => {
     const result = await app.axiosGet<ProvinceInterface[], {}>(
       "/location/province",
@@ -102,6 +153,7 @@ export function OutletPage() {
       setProvinces(result as ProvinceInterface[]);
     }
   };
+
   const handleSelectProvinceChange = async (value: number) => {
     const districts = await app.axiosGet<DistrictInterface[], {}>(
       "/location/district/" + value,
@@ -111,6 +163,7 @@ export function OutletPage() {
       setDistricts(districts as DistrictInterface[]);
     }
   };
+
   const handleSelectProvinceSelect = () => {
     addOrUpdateOutletForm.setFieldsValue({
       districtId: undefined,
@@ -121,6 +174,7 @@ export function OutletPage() {
     getData(filter);
     getProvince();
   }, []);
+
   return (
     <>
       <Card css={{ padding: "1rem 1rem 0rem 1rem" }}>
@@ -129,26 +183,53 @@ export function OutletPage() {
           onFinish={handleSearch}
           initialValues={filter}
         >
-          <Row gutter={[8, 8]}>
-            <Col>
-              <Form.Item label={"Name"} name={"name"}>
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col>
-              <Form.Item label={"Outlet_ID"} name={"code"}>
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col>
-              <Form.Item label={" "}>
-                <Button
-                  htmlType={"submit"}
-                  icon={<SearchOutlined />}
-                  loading={isLoadingData}
-                />
-              </Form.Item>
-            </Col>
+          <Row>
+            <Space>
+              <Col>
+                <Form.Item label={"Outlet_ID"} name={"code"}>
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col>
+                <Form.Item label={"Outlet"} name={"name"}>
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col>
+                <Form.Item label={"Địa chỉ"} name={"address"}>
+                  <Input />
+                </Form.Item>
+              </Col>
+              <Col>
+                <Form.Item
+                  label={"Tỉnh/Thành phố"}
+                  name={"provinceId"}
+                  style={{ width: "170px" }}
+                >
+                  <Select
+                    showSearch={true}
+                    allowClear={true}
+                    filterOption={(input, option) =>
+                      (option!.label as unknown as string)
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
+                    }
+                    options={provinces.map((province) => {
+                      return { label: province.name, value: province.id };
+                    })}
+                  />
+                </Form.Item>
+              </Col>
+              <Col>
+                <Form.Item label={" "}>
+                  <Button
+                    htmlType={"submit"}
+                    icon={<SearchOutlined />}
+                    loading={isLoadingData}
+                  />
+                </Form.Item>
+              </Col>
+            </Space>
           </Row>
         </Form>
       </Card>
@@ -160,6 +241,9 @@ export function OutletPage() {
               icon={<PlusCircleOutlined />}
               onClick={() => {
                 setIsModalAddOutletOpen(true);
+                setFormAction(CURD.CREATE);
+                setModalTitle('Thêm outlet');
+                addOrUpdateOutletForm.resetFields();
               }}
             >
               Thêm
@@ -227,24 +311,24 @@ export function OutletPage() {
                 return record?.province?.name;
               },
             },
-            {
-              key: "isActive",
-              dataIndex: "isActive",
-              render: (value: boolean) => {
-                if (value) {
-                  return (
-                    <Tag color="green" icon={<CheckCircleFilled />}>
-                      Active
-                    </Tag>
-                  );
-                }
-                return (
-                  <Tag color="red" icon={<DeleteFilled />}>
-                    Delete
-                  </Tag>
-                );
-              },
-            },
+            // {
+            //   key: "isActive",
+            //   dataIndex: "isActive",
+            //   render: (value: boolean) => {
+            //     if (value) {
+            //       return (
+            //         <Tag color="green" icon={<CheckCircleFilled />}>
+            //           Active
+            //         </Tag>
+            //       );
+            //     }
+            //     return (
+            //       <Tag color="red" icon={<DeleteFilled />}>
+            //         Delete
+            //       </Tag>
+            //     );
+            //   },
+            // },
             {
               render: (_, record) => {
                 return (
@@ -256,7 +340,7 @@ export function OutletPage() {
                       }}
                     />
                     <Popconfirm
-                      title={`Xóa user: ${record.name}`}
+                      title={`Xóa outlet: ${record.code} - ${record.name}`}
                       onConfirm={() => {
                         handleBtnDeleteConfirm(record);
                       }}
@@ -272,8 +356,9 @@ export function OutletPage() {
           ]}
         />
       </Card>
+
       <Modal
-        title="Thêm Outlet"
+        title={modalTitle}
         open={isModalAddOutletOpen}
         onCancel={() => {
           setIsModalAddOutletOpen(false);
@@ -285,6 +370,7 @@ export function OutletPage() {
           onFinish={handleAddOutletFormSubmit}
           form={addOrUpdateOutletForm}
         >
+          <Form.Item name={'id'} hidden={true}></Form.Item>
           <Form.Item
             label={"Outlet_ID"}
             name={"code"}
@@ -294,7 +380,7 @@ export function OutletPage() {
           </Form.Item>
           <Form.Item
             label={"Outlet"}
-            name={"outlet"}
+            name={"name"}
             rules={[{ required: true }]}
           >
             <Input />
@@ -332,6 +418,13 @@ export function OutletPage() {
             rules={[{ required: true }]}
           >
             <Select
+              showSearch={true}
+              allowClear={true}
+              filterOption={(input, option) =>
+                (option!.label as unknown as string)
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
               options={districts.map((district) => {
                 return { label: district.name, value: district.id };
               })}
@@ -339,11 +432,12 @@ export function OutletPage() {
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
-              Tạo
+              Lưu
             </Button>
           </Form.Item>
         </Form>
       </Modal>
+
     </>
   );
 }

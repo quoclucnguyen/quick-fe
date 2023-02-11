@@ -135,7 +135,6 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const catchAxiosError = (error: AxiosError) => {
-    console.log(error);
     const data = error.response?.data as unknown as any;
     switch (error?.response?.status) {
       case 401:
@@ -143,7 +142,7 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
           title: error.code,
           content: data?.message,
           onOk: () => {
-            auth.signout(() => {});
+            auth.signout(() => { });
           },
         });
         break;
@@ -152,7 +151,15 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
           title: error.code,
           content: data?.message,
         });
+        throw error;
+      case 500:
+        modal.error({
+          title: error.code,
+          content: data?.message,
+        });
+        throw error;
 
+        break;
       default:
     }
   };
