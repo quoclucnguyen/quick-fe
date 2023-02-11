@@ -311,24 +311,6 @@ export function OutletPage() {
                 return record?.province?.name;
               },
             },
-            // {
-            //   key: "isActive",
-            //   dataIndex: "isActive",
-            //   render: (value: boolean) => {
-            //     if (value) {
-            //       return (
-            //         <Tag color="green" icon={<CheckCircleFilled />}>
-            //           Active
-            //         </Tag>
-            //       );
-            //     }
-            //     return (
-            //       <Tag color="red" icon={<DeleteFilled />}>
-            //         Delete
-            //       </Tag>
-            //     );
-            //   },
-            // },
             {
               render: (_, record) => {
                 return (

@@ -20,6 +20,7 @@ import localForage from "localforage";
 import UserPage from "./routes/user/user-page";
 import ErrorPage from "./ErrorPage";
 import { OutletPage } from "./routes/outlet/OutletPage";
+import { CustomerPage } from "./routes/customer/CustomerPage";
 
 export interface UserLogin {
   id: number;
@@ -248,6 +249,14 @@ function App() {
                 element={
                   <RequireAuth>
                     <OutletPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path={"customer"}
+                element={
+                  <RequireAuth>
+                    <CustomerPage />
                   </RequireAuth>
                 }
               />
