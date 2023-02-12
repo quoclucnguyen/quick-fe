@@ -78,7 +78,10 @@ export function OutletPage() {
     const filterSearch: Filter = {
       ...filter,
       ...values,
+      take: 10,
+      skip: 0,
     }
+    setFilter(filterSearch);
     getData(filterSearch);
   };
 

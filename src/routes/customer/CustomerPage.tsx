@@ -10,6 +10,9 @@ import dayjs from 'dayjs'
 interface Filter {
   take: number;
   skip: number;
+  startDate?: number;
+  endDate?: number;
+  date?: [dayjs.Dayjs, dayjs.Dayjs];
 }
 
 interface CustomerInterface {
@@ -44,7 +47,30 @@ export function CustomerPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
-  const handleSearch = () => { }
+  const handleSearch = (values: {
+    code?: string;
+    name?: string;
+    phone?: string;
+    otp?: string;
+    provinceId?: number;
+    date?: [dayjs.Dayjs, dayjs.Dayjs];
+  }) => {
+    const filterSearch: Filter = {
+      ...filter,
+      ...values,
+      take: 10,
+      skip: 0,
+    }
+    if (values.date) {
+      const [startDate, endDate] = values.date;
+      filterSearch.startDate = startDate.unix();
+      filterSearch.endDate = endDate.unix();
+      delete filterSearch.date;
+    }
+    
+    setFilter(filterSearch);
+    getData(filterSearch);
+  }
   const getData = (filter: Filter) => {
     app.axiosGet<{ entities: CustomerInterface[]; count: number }, Filter>('/customers', filter)
       .then(result => {
