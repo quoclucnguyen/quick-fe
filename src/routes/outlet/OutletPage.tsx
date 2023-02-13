@@ -46,7 +46,7 @@ interface Filter {
   skip: number;
 }
 
-export function OutletPage() {
+export default function OutletPage() {
   const app = useApp();
 
   const [filter, setFilter] = useState<Filter>({
@@ -69,18 +69,22 @@ export function OutletPage() {
   const [formAction, setFormAction] = useState<CURD | null>(null);
   const [provinces, setProvinces] = useState<ProvinceInterface[]>([]);
   const [districts, setDistricts] = useState<DistrictInterface[]>([]);
-  const [modalTitle, setModalTitle] = useState<string>('');
+  const [modalTitle, setModalTitle] = useState<string>("");
 
   const [addOrUpdateOutletForm] = Form.useForm();
 
-
-  const handleSearch = (values: { code?: string; name?: string; address?: string; provinceId?: number }) => {
+  const handleSearch = (values: {
+    code?: string;
+    name?: string;
+    address?: string;
+    provinceId?: number;
+  }) => {
     const filterSearch: Filter = {
       ...filter,
       ...values,
       take: 10,
       skip: 0,
-    }
+    };
     setFilter(filterSearch);
     getData(filterSearch);
   };
@@ -102,46 +106,53 @@ export function OutletPage() {
   const handleBtnEditOutletClick = (record: OutletInterface) => {
     setFormAction(CURD.UPDATE);
     setIsModalAddOutletOpen(true);
-    setModalTitle(`Cập nhật thông tin outlet: ${record.code} - ${record.name}`)
+    setModalTitle(`Cập nhật thông tin outlet: ${record.code} - ${record.name}`);
     addOrUpdateOutletForm.setFieldsValue(record);
     handleSelectProvinceChange(record.province?.id as number);
   };
   const handleBtnDeleteConfirm = (record: OutletInterface) => {
-    app.axiosDelete(`/outlets/${record.id}`).then(result => {
+    app.axiosDelete(`/outlets/${record.id}`).then((result) => {
       app.showAlert({
-        type: 'success',
-        message: 'Xóa thành công.'
+        type: "success",
+        message: "Xóa thành công.",
       });
       getData(filter);
-    })
+    });
   };
 
   const handleAddOutletFormSubmit = async () => {
     await addOrUpdateOutletForm.validateFields();
     switch (formAction) {
       case CURD.CREATE:
-        app.axiosPost('/outlets', addOrUpdateOutletForm.getFieldsValue()).then(result => {
-          app.showAlert({
-            type: 'success',
-            message: 'Thêm outlet thành công',
-          })
-          addOrUpdateOutletForm.resetFields();
-          setIsModalAddOutletOpen(false);
-          setModalTitle('');
-          getData(filter);
-        });
+        app
+          .axiosPost("/outlets", addOrUpdateOutletForm.getFieldsValue())
+          .then((result) => {
+            app.showAlert({
+              type: "success",
+              message: "Thêm outlet thành công",
+            });
+            addOrUpdateOutletForm.resetFields();
+            setIsModalAddOutletOpen(false);
+            setModalTitle("");
+            getData(filter);
+          });
         break;
       case CURD.UPDATE:
-        app.axiosPatch(`/outlets/${addOrUpdateOutletForm.getFieldValue('id')}`, addOrUpdateOutletForm.getFieldsValue()).then(result => {
-          app.showAlert({
-            type: 'success',
-            message: 'Cập nhập thông tin outlet thành công',
-          })
-          addOrUpdateOutletForm.resetFields();
-          setIsModalAddOutletOpen(false);
-          setModalTitle('');
-          getData(filter);
-        })
+        app
+          .axiosPatch(
+            `/outlets/${addOrUpdateOutletForm.getFieldValue("id")}`,
+            addOrUpdateOutletForm.getFieldsValue()
+          )
+          .then((result) => {
+            app.showAlert({
+              type: "success",
+              message: "Cập nhập thông tin outlet thành công",
+            });
+            addOrUpdateOutletForm.resetFields();
+            setIsModalAddOutletOpen(false);
+            setModalTitle("");
+            getData(filter);
+          });
         break;
       default:
     }
@@ -245,7 +256,7 @@ export function OutletPage() {
               onClick={() => {
                 setIsModalAddOutletOpen(true);
                 setFormAction(CURD.CREATE);
-                setModalTitle('Thêm outlet');
+                setModalTitle("Thêm outlet");
                 addOrUpdateOutletForm.resetFields();
               }}
             >
@@ -355,7 +366,7 @@ export function OutletPage() {
           onFinish={handleAddOutletFormSubmit}
           form={addOrUpdateOutletForm}
         >
-          <Form.Item name={'id'} hidden={true}></Form.Item>
+          <Form.Item name={"id"} hidden={true}></Form.Item>
           <Form.Item
             label={"Outlet_ID"}
             name={"code"}
@@ -422,7 +433,6 @@ export function OutletPage() {
           </Form.Item>
         </Form>
       </Modal>
-
     </>
   );
 }

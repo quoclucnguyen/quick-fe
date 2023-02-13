@@ -17,10 +17,15 @@ import { getUserLogin } from "./helper";
 import axios, { AxiosError, AxiosInstance } from "axios";
 import { Modal } from "antd";
 import localForage from "localforage";
-import UserPage from "./routes/user/user-page";
 import ErrorPage from "./ErrorPage";
-import { OutletPage } from "./routes/outlet/OutletPage";
-import { CustomerPage } from "./routes/customer/CustomerPage";
+
+const OutletPage = React.lazy(() => import("./routes/outlet/OutletPage"));
+const CustomerPage = React.lazy(() => import("./routes/customer/CustomerPage"));
+const UserPage = React.lazy(() => import("./routes/user/user-page"));
+
+// import UserPage from "./routes/user/user-page";
+// import { OutletPage } from "./routes/outlet/OutletPage";
+// import { CustomerPage } from "./routes/customer/CustomerPage";
 
 export interface UserLogin {
   id: number;
@@ -143,7 +148,7 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
           title: error.code,
           content: data?.message,
           onOk: () => {
-            auth.signout(() => { });
+            auth.signout(() => {});
           },
         });
         break;
@@ -219,49 +224,51 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppProvider>
-          <Routes>
-            <Route element={<LoginLayout />} path={"/login"}>
-              <Route index element={<LoginPage />} />
-            </Route>
-            <Route
-              element={<MainLayout />}
-              path={"/"}
-              errorElement={<ErrorPage />}
-            >
+          <React.Suspense>
+            <Routes>
+              <Route element={<LoginLayout />} path={"/login"}>
+                <Route index element={<LoginPage />} />
+              </Route>
               <Route
-                index
-                element={
-                  <RequireAuth>
-                    <DashboardPage />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path={"user"}
-                element={
-                  <RequireAuth>
-                    <UserPage />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path={"outlet"}
-                element={
-                  <RequireAuth>
-                    <OutletPage />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path={"customer"}
-                element={
-                  <RequireAuth>
-                    <CustomerPage />
-                  </RequireAuth>
-                }
-              />
-            </Route>
-          </Routes>
+                element={<MainLayout />}
+                path={"/"}
+                errorElement={<ErrorPage />}
+              >
+                <Route
+                  index
+                  element={
+                    <RequireAuth>
+                      <DashboardPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path={"user"}
+                  element={
+                    <RequireAuth>
+                      <UserPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path={"outlet"}
+                  element={
+                    <RequireAuth>
+                      <OutletPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path={"customer"}
+                  element={
+                    <RequireAuth>
+                      <CustomerPage />
+                    </RequireAuth>
+                  }
+                />
+              </Route>
+            </Routes>
+          </React.Suspense>
         </AppProvider>
       </AuthProvider>
     </BrowserRouter>
