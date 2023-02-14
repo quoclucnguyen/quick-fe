@@ -151,12 +151,14 @@ export default function CustomerPage() {
               address: customer?.outlet?.address,
               districtName: customer?.outlet?.district?.name,
               provinceName: customer?.outlet?.province?.name,
-              time: dayjs(customer.createdAtTimestamp).format("DD/MM/YYYY"),
+              time: dayjs(customer.createdAtTimestamp * 1000).format(
+                "DD/MM/YYYY"
+              ),
               sessionId:
                 customer?.createdByUser?.name +
                 "-" +
                 customer?.outlet?.code +
-                dayjs(customer.createdAtTimestamp).format("DDMMYYYY"),
+                dayjs(customer.createdAtTimestamp * 1000).format("DDMMYYYY"),
               customerName: customer.name,
               phone: customer.phone,
               otp: customer.otp,
