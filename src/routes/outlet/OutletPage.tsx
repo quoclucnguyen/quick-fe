@@ -82,9 +82,10 @@ export default function OutletPage() {
     const filterSearch: Filter = {
       ...filter,
       ...values,
-      take: 10,
+      take: pageSize,
       skip: 0,
     };
+    setCurrentPage(1);
     setFilter(filterSearch);
     getData(filterSearch);
   };

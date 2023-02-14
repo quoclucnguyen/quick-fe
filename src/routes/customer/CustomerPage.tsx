@@ -1,4 +1,9 @@
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  ExportOutlined,
+  FileExcelFilled,
+  FileExcelTwoTone,
+  SearchOutlined,
+} from "@ant-design/icons";
 import { Card } from "@nextui-org/react";
 import {
   Button,
@@ -7,6 +12,7 @@ import {
   Form,
   Image,
   Input,
+  Modal,
   Row,
   Select,
   Space,
@@ -14,9 +20,11 @@ import {
 } from "antd";
 import { useEffect, useState } from "react";
 import { useApp } from "../../App";
-import { ProvinceInterface } from "../../helper";
+import { downloadFile, loadData, ProvinceInterface } from "../../helper";
 import { OutletInterface } from "../outlet/OutletPage";
 import dayjs from "dayjs";
+import "dayjs/locale/vi";
+import locale from "antd/es/date-picker/locale/vi_VN";
 
 interface Filter {
   take: number;
@@ -57,6 +65,9 @@ export default function CustomerPage() {
   const [total, setTotal] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
+  const [isBtnExcelLoading, setIsBtnExcelLoading] = useState<boolean>(false);
+  const [modal, contextHolder] = Modal.useModal();
+  const [searchForm] = Form.useForm();
 
   const handleSearch = (values: {
     code?: string;
@@ -69,16 +80,20 @@ export default function CustomerPage() {
     const filterSearch: Filter = {
       ...filter,
       ...values,
-      take: 10,
+      take: pageSize,
       skip: 0,
     };
-    if (values.date) {
+
+    if (values.date !== undefined && values.date !== null) {
       const [startDate, endDate] = values.date;
       filterSearch.startDate = startDate.unix();
       filterSearch.endDate = endDate.unix();
       delete filterSearch.date;
+    } else {
+      delete filterSearch.startDate;
+      delete filterSearch.endDate;
     }
-
+    setCurrentPage(1);
     setFilter(filterSearch);
     getData(filterSearch);
   };
@@ -108,6 +123,63 @@ export default function CustomerPage() {
     }
   };
 
+  const handleBtnExceClick = () => {
+    setIsBtnExcelLoading(true);
+    modal.confirm({
+      title: "Xác nhận",
+      content: "Bạn muốn xuất danh sách theo tiêu chí đã chọn?",
+      okText: "Xác nhận",
+      cancelText: "Hủy",
+      onCancel: () => setIsBtnExcelLoading(false),
+      onOk: async () => {
+        const value = searchForm.getFieldsValue();
+        const result = await app.axiosGet<CustomerInterface[], Filter>(
+          "/customers",
+          {
+            ...value,
+            take: 0,
+            skip: 0,
+          }
+        );
+        if (!Array.isArray(result) && result !== undefined) {
+          const { entities, count } = result;
+          const data = Array.from(entities, (customer: CustomerInterface) => {
+            return Object.values({
+              name: customer?.createdByUser?.name,
+              code: customer?.outlet?.code,
+              outletName: customer?.outlet?.name,
+              address: customer?.outlet?.address,
+              districtName: customer?.outlet?.district?.name,
+              provinceName: customer?.outlet?.province?.name,
+              time: dayjs(customer.createdAtTimestamp).format("DD/MM/YYYY"),
+              sessionId:
+                customer?.createdByUser?.name +
+                "-" +
+                customer?.outlet?.code +
+                dayjs(customer.createdAtTimestamp).format("DDMMYYYY"),
+              customerName: customer.name,
+              phone: customer.phone,
+              otp: customer.otp,
+              images: customer?.customerImages
+                .map((customerImage) => customerImage.image?.path)
+                .join("\n"),
+            });
+          });
+          let wb = await loadData(
+            "/TEMP_EXPORT.xlsx?v=" + new Date().getTime()
+          );
+          let worksheet = wb.getWorksheet("data");
+          const BEGIN_INDEX_OF_FILE = 2;
+          worksheet.insertRows(BEGIN_INDEX_OF_FILE + 1, data, "i+");
+          worksheet.spliceRows(BEGIN_INDEX_OF_FILE, 1);
+          await downloadFile(wb, "DS_" + new Date().getTime() + ".xlsx");
+        }
+
+        setIsBtnExcelLoading(false);
+      },
+    });
+  };
+
   useEffect(() => {
     getData(filter);
     getProvince();
@@ -119,6 +191,7 @@ export default function CustomerPage() {
           layout={"vertical"}
           onFinish={handleSearch}
           initialValues={filter}
+          form={searchForm}
         >
           <Row>
             <Space>
@@ -165,7 +238,7 @@ export default function CustomerPage() {
               </Col>
               <Col>
                 <Form.Item name={"date"} label={"Ngày"}>
-                  <RangePicker />
+                  <RangePicker format={"DD/MM/YYYY"} locale={locale} />
                 </Form.Item>
               </Col>
               <Col>
@@ -175,6 +248,18 @@ export default function CustomerPage() {
                     icon={<SearchOutlined />}
                     loading={isLoadingData}
                   />
+                </Form.Item>
+              </Col>
+              <Col>
+                <Form.Item label={" "}>
+                  <Button
+                    htmlType={"button"}
+                    icon={<FileExcelTwoTone />}
+                    loading={isBtnExcelLoading}
+                    onClick={handleBtnExceClick}
+                  >
+                    Xuất Excel
+                  </Button>
                 </Form.Item>
               </Col>
             </Space>
@@ -302,6 +387,7 @@ export default function CustomerPage() {
           ]}
         />
       </Card>
+      {contextHolder}
     </>
   );
 }

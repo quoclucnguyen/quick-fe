@@ -11,18 +11,22 @@ import {
 } from "react-router-dom";
 import MainLayout from "./layouts/main-layout";
 import LoginLayout from "./layouts/login-layout";
-import LoginPage from "./routes/login/login-page";
-import DashboardPage from "./routes/dashboard/dashboard-page";
 import { getUserLogin } from "./helper";
 import axios, { AxiosError, AxiosInstance } from "axios";
 import { Modal } from "antd";
 import localForage from "localforage";
-import ErrorPage from "./ErrorPage";
+
 
 const OutletPage = React.lazy(() => import("./routes/outlet/OutletPage"));
 const CustomerPage = React.lazy(() => import("./routes/customer/CustomerPage"));
 const UserPage = React.lazy(() => import("./routes/user/user-page"));
+const LoginPage = React.lazy(()=> import("./routes/login/login-page"));
+const DashboardPage = React.lazy(() => import("./routes/dashboard/dashboard-page"));
+const ErrorPage = React.lazy(()=> import('./ErrorPage'));
 
+// import ErrorPage from "./ErrorPage";
+// import LoginPage from "./routes/login/login-page";
+// import DashboardPage from "./routes/dashboard/dashboard-page";
 // import UserPage from "./routes/user/user-page";
 // import { OutletPage } from "./routes/outlet/OutletPage";
 // import { CustomerPage } from "./routes/customer/CustomerPage";
@@ -70,7 +74,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         .setItem(import.meta.env.VITE_APP_NAME + "_user", newUser)
         .then(() => {
           setUser(newUser);
-          location.href = "/";
+          location.href = "/customer";
         });
     });
   };

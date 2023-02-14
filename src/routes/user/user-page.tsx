@@ -1,13 +1,8 @@
 import {
   CheckCircleFilled,
-  DeleteColumnOutlined,
   DeleteFilled,
-  DeleteOutlined,
-  EditFilled,
   EditOutlined,
-  LoadingOutlined,
   PlusCircleOutlined,
-  ReloadOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import { Card } from "@nextui-org/react";
@@ -27,13 +22,7 @@ import {
 } from "antd";
 import { useEffect, useState } from "react";
 import { useApp } from "../../App";
-import { faker } from "@faker-js/faker";
-import FormBuilder from "../../components/Form";
-import {
-  FormBuilderPropertyInterface,
-  PropertyType,
-} from "../../components/interface";
-import axios from "axios";
+// import { faker } from "@faker-js/faker";
 
 interface User {
   id: number;
@@ -75,9 +64,10 @@ export default function UserPage() {
     const value = {
       username: values.username ? values.username : null,
       name: values.name ? values.name : null,
-      take: 10,
+      take: pageSize,
       skip: 0,
     };
+    setCurrentPage(1);
     getData(value);
     setFilter(value);
   };
@@ -123,15 +113,15 @@ export default function UserPage() {
       setIsModalAddUserOpen(false);
     }
   };
-  const handleCreateTestUser = () => {
-    faker.locale = "vi";
-    createUserForm.setFieldsValue({
-      username: faker.internet.userName("test"),
-      name: faker.name.fullName({ firstName: "Test" }),
-      password: "123456",
-      role: "USER",
-    });
-  };
+  // const handleCreateTestUser = () => {
+  //   faker.locale = "vi";
+  //   createUserForm.setFieldsValue({
+  //     username: faker.internet.userName("test"),
+  //     name: faker.name.fullName({ firstName: "Test" }),
+  //     password: "123456",
+  //     role: "USER",
+  //   });
+  // };
 
   const handleBtnEditUserClick = (record: User) => {
     console.log(record);
@@ -374,7 +364,7 @@ export default function UserPage() {
         <br />
         <Button
           onClick={() => {
-            handleCreateTestUser();
+            // handleCreateTestUser();
           }}
         >
           Test User
