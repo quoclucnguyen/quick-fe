@@ -335,7 +335,9 @@ export default function CustomerPage() {
               key: "createdAt",
               dataIndex: "createdAt",
               render: (_, record) => {
-                return dayjs(record?.createdAt).format("HH:mm:ss DD/MM/YYYY");
+                return dayjs(record?.createdAtTimestamp * 1000).format(
+                  "HH:mm:ss DD/MM/YYYY"
+                );
               },
             },
             {

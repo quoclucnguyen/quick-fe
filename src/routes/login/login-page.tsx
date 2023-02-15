@@ -39,7 +39,6 @@ export default function LoginPage() {
           name={"username"}
           label={"Username"}
           rules={[{ required: true }]}
-          initialValue={"sa"}
         >
           <Input />
         </Form.Item>
@@ -47,7 +46,6 @@ export default function LoginPage() {
           name={"password"}
           label={"Password"}
           rules={[{ required: true }]}
-          initialValue={"abc@123"}
         >
           <Input.Password />
         </Form.Item>
