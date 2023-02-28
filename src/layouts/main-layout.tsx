@@ -9,6 +9,7 @@ import {
   UploadOutlined,
   UserOutlined,
   VideoCameraOutlined,
+  RightSquareOutlined,
 } from "@ant-design/icons";
 import { Layout, Menu, Button, Row, Col, Modal } from "antd";
 import "./../assets/css/main-layout.css";
@@ -68,6 +69,16 @@ const MainLayout = () => {
               key: "/user",
               icon: <UserOutlined />,
               label: "User",
+            },
+            {
+              key: "/book",
+              icon: <RightSquareOutlined />,
+              label: "Books",
+            },
+            {
+              key: "/author",
+              icon: <RightSquareOutlined />,
+              label: "Author",
             },
           ]}
         />

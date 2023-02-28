@@ -16,13 +16,16 @@ import axios, { AxiosError, AxiosInstance } from "axios";
 import { Modal } from "antd";
 import localForage from "localforage";
 
-
+const ErrorPage = React.lazy(() => import("./ErrorPage"));
 const OutletPage = React.lazy(() => import("./routes/outlet/OutletPage"));
 const CustomerPage = React.lazy(() => import("./routes/customer/CustomerPage"));
 const UserPage = React.lazy(() => import("./routes/user/user-page"));
-const LoginPage = React.lazy(()=> import("./routes/login/login-page"));
-const DashboardPage = React.lazy(() => import("./routes/dashboard/dashboard-page"));
-const ErrorPage = React.lazy(()=> import('./ErrorPage'));
+const LoginPage = React.lazy(() => import("./routes/login/login-page"));
+const DashboardPage = React.lazy(
+  () => import("./routes/dashboard/dashboard-page")
+);
+const BookPage = React.lazy(() => import("./routes/book/BookPage"));
+const AuthorPage = React.lazy(() => import("./routes/author/AuthorPage"));
 
 // import ErrorPage from "./ErrorPage";
 // import LoginPage from "./routes/login/login-page";
@@ -147,6 +150,12 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const catchAxiosError = (error: AxiosError) => {
     const data = error.response?.data as unknown as any;
     switch (error?.response?.status) {
+      case 400:
+        modal.error({
+          title: error.code,
+          content: data?.message,
+        });
+        throw error;
       case 401:
         modal.error({
           title: error.code,
@@ -156,7 +165,7 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
           },
         });
         break;
-      case 400:
+      case 404:
         modal.error({
           title: error.code,
           content: data?.message,
@@ -168,8 +177,6 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
           content: data?.message,
         });
         throw error;
-
-        break;
       default:
     }
   };
@@ -267,6 +274,22 @@ function App() {
                   element={
                     <RequireAuth>
                       <CustomerPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path={"book"}
+                  element={
+                    <RequireAuth>
+                      <BookPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path={"author"}
+                  element={
+                    <RequireAuth>
+                      <AuthorPage />
                     </RequireAuth>
                   }
                 />

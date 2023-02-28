@@ -77,3 +77,23 @@ export const downloadFile = (wb: Excel.Workbook, fileName: string) => {
       throw error;
     });
 };
+export const numToCol = (num: number): string => {
+  // initialize an empty string for the result
+  let result = "";
+  // while num is positive, repeat the following steps
+  while (num > 0) {
+    // get the remainder of num divided by 26
+    let rem = num % 26;
+    // if rem is zero, set it to 26 and subtract one from num
+    if (rem == 0) {
+      rem = 26;
+      num--;
+    }
+    // convert rem to a letter using String.fromCharCode() and prepend it to the result
+    result = String.fromCharCode(rem + 64) + result;
+    // divide num by 26 and round down
+    num = Math.floor(num / 26);
+  }
+  // return the result
+  return result;
+};
