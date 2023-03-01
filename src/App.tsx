@@ -1,3 +1,4 @@
+// protected region Add additional imports here on begin
 import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   BrowserRouter,
@@ -24,16 +25,11 @@ const LoginPage = React.lazy(() => import("./routes/login/login-page"));
 const DashboardPage = React.lazy(
   () => import("./routes/dashboard/dashboard-page")
 );
+// protected region Add additional imports here end
 const BookPage = React.lazy(() => import("./routes/book/BookPage"));
 const AuthorPage = React.lazy(() => import("./routes/author/AuthorPage"));
 
-// import ErrorPage from "./ErrorPage";
-// import LoginPage from "./routes/login/login-page";
-// import DashboardPage from "./routes/dashboard/dashboard-page";
-// import UserPage from "./routes/user/user-page";
-// import { OutletPage } from "./routes/outlet/OutletPage";
-// import { CustomerPage } from "./routes/customer/CustomerPage";
-
+// protected region Add other code in here on begin
 export interface UserLogin {
   id: number;
   username: string;
@@ -277,23 +273,27 @@ function App() {
                     </RequireAuth>
                   }
                 />
-                <Route
-                  path={"book"}
-                  element={
-                    <RequireAuth>
-                      <BookPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path={"author"}
-                  element={
-                    <RequireAuth>
-                      <AuthorPage />
-                    </RequireAuth>
-                  }
-                />
-              </Route>
+// protected region Add other code in here end
+
+<Route
+  path={"book"}
+  element={
+    <RequireAuth>
+      <BookPage />
+    </RequireAuth>
+  }
+/>
+<Route
+  path={"author"}
+  element={
+    <RequireAuth>
+      <AuthorPage />
+    </RequireAuth>
+  }
+/>
+
+// protected region Add end code in here on begin
+</Route>
             </Routes>
           </React.Suspense>
         </AppProvider>
@@ -303,3 +303,4 @@ function App() {
 }
 
 export default App;
+// protected region Add end code in here end

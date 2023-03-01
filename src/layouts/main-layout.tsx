@@ -1,3 +1,4 @@
+// protected region Add additional imports here on begin
 import React, { useState } from "react";
 import {
   DashboardOutlined,
@@ -18,7 +19,9 @@ import { removeUserLogin } from "../helper";
 import { useAuth } from "../App";
 
 const { Header, Sider, Content } = Layout;
+// protected region Add additional imports here end
 
+// protected region Add other code in here on begin
 const MainLayout = () => {
   const [modal, contextHolder] = Modal.useModal();
 
@@ -70,6 +73,8 @@ const MainLayout = () => {
               icon: <UserOutlined />,
               label: "User",
             },
+// protected region Add other code in here end
+
             {
               key: "/book",
               icon: <RightSquareOutlined />,
@@ -78,40 +83,43 @@ const MainLayout = () => {
             {
               key: "/author",
               icon: <RightSquareOutlined />,
-              label: "Author",
+              label: "Authors",
             },
-          ]}
-        />
-      </Sider>
-      <Layout className="site-layout">
-        <Header className="site-layout-background" style={{ padding: 0 }}>
-          <Row justify={"end"}>
-            <Col>
-              <Button
-                type={"link"}
-                style={{ color: "#000" }}
-                onClick={handleLogoutBtnClick}
-                icon={<LogoutOutlined />}
-              >
-                {user?.name} (Đăng xuất)
-              </Button>
-            </Col>
-          </Row>
-        </Header>
-        <Content
-          className="site-layout-background"
-          style={{
-            margin: "24px 16px",
-            padding: 24,
-            minHeight: 280,
-          }}
-        >
-          <Outlet />
-        </Content>
-      </Layout>
-      {contextHolder}
-    </Layout>
-  );
+
+// protected region Add end code in here on begin
+]}
+/>
+</Sider>
+<Layout className="site-layout">
+<Header className="site-layout-background" style={{ padding: 0 }}>
+  <Row justify={"end"}>
+    <Col>
+      <Button
+        type={"link"}
+        style={{ color: "#000" }}
+        onClick={handleLogoutBtnClick}
+        icon={<LogoutOutlined />}
+      >
+        {user?.name} (Đăng xuất)
+      </Button>
+    </Col>
+  </Row>
+</Header>
+<Content
+  className="site-layout-background"
+  style={{
+    margin: "24px 16px",
+    padding: 24,
+    minHeight: 280,
+  }}
+>
+  <Outlet />
+</Content>
+</Layout>
+{contextHolder}
+</Layout>
+);
 };
 
 export default MainLayout;
+// protected region Add end code in here end
