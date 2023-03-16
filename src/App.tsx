@@ -1,3 +1,4 @@
+// protected region Add additional imports here on begin
 import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   BrowserRouter,
@@ -11,15 +12,24 @@ import {
 } from "react-router-dom";
 import MainLayout from "./layouts/main-layout";
 import LoginLayout from "./layouts/login-layout";
-import LoginPage from "./routes/login/login-page";
-import DashboardPage from "./routes/dashboard/dashboard-page";
 import { getUserLogin } from "./helper";
 import axios, { AxiosError, AxiosInstance } from "axios";
 import { Modal } from "antd";
 import localForage from "localforage";
-import UserPage from "./routes/user/user-page";
-import ErrorPage from "./ErrorPage";
 
+const ErrorPage = React.lazy(() => import("./ErrorPage"));
+const OutletPage = React.lazy(() => import("./routes/outlet/OutletPage"));
+const CustomerPage = React.lazy(() => import("./routes/customer/CustomerPage"));
+const UserPage = React.lazy(() => import("./routes/user/user-page"));
+const LoginPage = React.lazy(() => import("./routes/login/login-page"));
+const DashboardPage = React.lazy(
+  () => import("./routes/dashboard/dashboard-page")
+);
+// protected region Add additional imports here end
+const BookPage = React.lazy(() => import("./routes/book/BookPage"));
+const AuthorPage = React.lazy(() => import("./routes/author/AuthorPage"));
+
+// protected region Add other code in here on begin
 export interface UserLogin {
   id: number;
   username: string;
@@ -63,7 +73,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         .setItem(import.meta.env.VITE_APP_NAME + "_user", newUser)
         .then(() => {
           setUser(newUser);
-          location.href = "/";
+          location.href = "/customer";
         });
     });
   };
@@ -99,6 +109,8 @@ export interface AppContexType {
   showAlert: (alert: AlertType) => void;
   axiosGet<E, P>(url: string, params: P): Promise<E | E[] | void>;
   axiosPost<E, P>(url: string, body: P): Promise<E | E[] | void>;
+  axiosPatch<E, P>(url: string, body: P): Promise<E | E[] | void>;
+  axiosDelete<E>(url: string): Promise<E | E[] | void>;
 }
 
 const AppContext = createContext<AppContexType>(null!);
@@ -124,50 +136,87 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
       case "error":
         modal.error(config);
         break;
+      case "success":
+        modal.success(config);
+        break;
       default:
     }
   };
+
+  const catchAxiosError = (error: AxiosError) => {
+    const data = error.response?.data as unknown as any;
+    switch (error?.response?.status) {
+      case 400:
+        modal.error({
+          title: error.code,
+          content: data?.message,
+        });
+        throw error;
+      case 401:
+        modal.error({
+          title: error.code,
+          content: data?.message,
+          onOk: () => {
+            auth.signout(() => {});
+          },
+        });
+        break;
+      case 404:
+        modal.error({
+          title: error.code,
+          content: data?.message,
+        });
+        throw error;
+      case 500:
+        modal.error({
+          title: error.code,
+          content: data?.message,
+        });
+        throw error;
+      default:
+    }
+  };
+
   function axiosGet<E, P>(url: string, params: P) {
     return axiosInsance
       .get<E>(url, { params: params })
       .then((result) => {
-        console.log(result);
         return result.data;
       })
-      .catch((error: AxiosError) => {
-        console.log(error);
-        if (error?.response?.status == 401) {
-          modal.error({
-            title: error.code,
-            content: error.message,
-            onOk: () => {
-              auth.signout(() => {});
-            },
-          });
-        }
-      });
+      .catch(catchAxiosError);
   }
   function axiosPost<E, P>(url: string, body: P) {
     return axiosInsance
       .post<E>(url, body)
       .then((result) => {
-        console.log(result);
         return result.data;
       })
-      .catch((error: AxiosError) => {
-        console.log(error);
-        if (error?.response?.status == 401) {
-          modal.error({
-            title: error.code,
-            content: error.message,
-            onOk: () => {
-              auth.signout(() => {});
-            },
-          });
-        }
-      });
+      .catch(catchAxiosError);
   }
-  const value = { showAlert, axiosInsance, axiosGet, axiosPost };
+  function axiosPatch<E, P>(url: string, body: P) {
+    return axiosInsance
+      .patch<E>(url, body)
+      .then((result) => {
+        return result.data;
+      })
+      .catch(catchAxiosError);
+  }
+  function axiosDelete<E>(url: string) {
+    return axiosInsance
+      .delete<E>(url)
+      .then((result) => {
+        return result.data;
+      })
+      .catch(catchAxiosError);
+  }
+  const value = {
+    showAlert,
+    axiosInsance,
+    axiosGet,
+    axiosPost,
+    axiosPatch,
+    axiosDelete,
+  };
   return (
     <AppContext.Provider value={value}>
       {children}
@@ -182,33 +231,71 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppProvider>
-          <Routes>
-            <Route element={<LoginLayout />} path={"/login"}>
-              <Route index element={<LoginPage />} />
-            </Route>
-            <Route
-              element={<MainLayout />}
-              path={"/"}
-              errorElement={<ErrorPage />}
-            >
+          <React.Suspense>
+            <Routes>
+              <Route element={<LoginLayout />} path={"/login"}>
+                <Route index element={<LoginPage />} />
+              </Route>
               <Route
-                index
-                element={
-                  <RequireAuth>
-                    <DashboardPage />
-                  </RequireAuth>
-                }
-              />
-              <Route
-                path={"user"}
-                element={
-                  <RequireAuth>
-                    <UserPage />
-                  </RequireAuth>
-                }
-              />
-            </Route>
-          </Routes>
+                element={<MainLayout />}
+                path={"/"}
+                errorElement={<ErrorPage />}
+              >
+                <Route
+                  index
+                  element={
+                    <RequireAuth>
+                      <DashboardPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path={"user"}
+                  element={
+                    <RequireAuth>
+                      <UserPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path={"outlet"}
+                  element={
+                    <RequireAuth>
+                      <OutletPage />
+                    </RequireAuth>
+                  }
+                />
+                <Route
+                  path={"customer"}
+                  element={
+                    <RequireAuth>
+                      <CustomerPage />
+                    </RequireAuth>
+                  }
+                />
+// protected region Add other code in here end
+
+<Route
+  path={"book"}
+  element={
+    <RequireAuth>
+      <BookPage />
+    </RequireAuth>
+  }
+/>
+<Route
+  path={"author"}
+  element={
+    <RequireAuth>
+      <AuthorPage />
+    </RequireAuth>
+  }
+/>
+
+// protected region Add end code in here on begin
+</Route>
+            </Routes>
+          </React.Suspense>
         </AppProvider>
       </AuthProvider>
     </BrowserRouter>
@@ -216,3 +303,4 @@ function App() {
 }
 
 export default App;
+// protected region Add end code in here end
