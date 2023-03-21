@@ -59,32 +59,13 @@ const MainLayout = () => {
             //   label: "nav 1",
             // },
             {
-              key: "/customer",
-              icon: <OrderedListOutlined />,
-              label: "Customer",
-            },
-            {
-              key: "/outlet",
-              icon: <ShopOutlined />,
-              label: "Outlet",
-            },
-            {
               key: "/user",
               icon: <UserOutlined />,
               label: "User",
             },
 // protected region Add other code in here end
 
-            {
-              key: "/book",
-              icon: <RightSquareOutlined />,
-              label: "Books",
-            },
-            {
-              key: "/author",
-              icon: <RightSquareOutlined />,
-              label: "Authors",
-            },
+        
 
 // protected region Add end code in here on begin
 ]}
