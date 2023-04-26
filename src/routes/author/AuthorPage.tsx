@@ -37,6 +37,8 @@ export interface AuthorInterface {
   name: string;
   code: string;
   address: string;
+  ageNumber: number;
+  countTime: number;
 }
 interface Filter {
   take: number;
@@ -44,16 +46,22 @@ interface Filter {
   name: string | null;
   code: string | null;
   address: string | null;
+  ageNumber: number | null;
+  countTime: number | null;
 }
 export enum ExcelImportHeader {
   name = 'Tên',
   code = 'Code',
   address = 'Address',
+  agenumber = 'Age Number',
+  count = 'Count Times',
 }
 export const HeaderToParam = {
   [ExcelImportHeader.name.toString()]: 'name',
   [ExcelImportHeader.code.toString()]: 'code',
   [ExcelImportHeader.address.toString()]: 'address',
+  [ExcelImportHeader.agenumber.toString()]: 'ageNumber',
+  [ExcelImportHeader.count.toString()]: 'count',
 }
 
 export default function AuthorPage() {
@@ -64,6 +72,8 @@ export default function AuthorPage() {
     name: null,
     code: null,
     address: null,
+    ageNumber: null,
+    countTime: null,
     take: 10,
     skip: 0,
   });
@@ -129,6 +139,8 @@ export default function AuthorPage() {
   name?: string;
   code?: string;
   address?: string;
+  ageNumber?: number;
+  countTime?: number;
   }) => {
     const filterSearch: Filter = {
       ...filter,
@@ -227,6 +239,8 @@ export default function AuthorPage() {
             name: entity.name,
             code: entity.code,
             address: entity.address,
+            ageNumber: entity.ageNumber,
+            count: entity.count,
         });
       });
       const wb = new Excel.Workbook();
@@ -235,6 +249,8 @@ export default function AuthorPage() {
             "Tên",
             "Code",
             "Address",
+            "Age Number",
+            "Count Times",
       ];
       listProperties.forEach((property, index) => {
         const cell = ws.getCell(`${numToCol(index + 1)}1`);
@@ -280,6 +296,8 @@ export default function AuthorPage() {
           "Tên",
           "Code",
           "Address",
+          "Age Number",
+          "Count Times",
     ];
     listProperties.forEach((property, index) => {
       const cell = ws.getCell(`${numToCol(index + 1)}1`);
@@ -342,6 +360,16 @@ export default function AuthorPage() {
               </Col>
               <Col>
                 <Form.Item label={"Address"} name={"address"}>
+                  <Input allowClear />
+                </Form.Item>
+              </Col>
+              <Col>
+                <Form.Item label={"Age Number"} name={"agenumber"}>
+                  <Input allowClear />
+                </Form.Item>
+              </Col>
+              <Col>
+                <Form.Item label={"Count Times"} name={"count"}>
                   <Input allowClear />
                 </Form.Item>
               </Col>
@@ -451,6 +479,16 @@ export default function AuthorPage() {
               dataIndex: "address",
             },
             {
+              title: "Age Number",
+              key: "ageNumber",
+              dataIndex: "ageNumber",
+            },
+            {
+              title: "Count Times",
+              key: "countTime",
+              dataIndex: "countTime",
+            },
+            {
               render: (_, record) => {
                 return (
                   <Space>
@@ -513,6 +551,20 @@ export default function AuthorPage() {
             rules={[{ required: true }]}
           >
           <Input />
+          </Form.Item>
+          <Form.Item
+            label={"Age Number"}
+            name={"ageNumber"}
+            rules={[{ required: true }]}
+          >
+          <Input  type= 'number'/>
+          </Form.Item>
+          <Form.Item
+            label={"Count Times"}
+            name={"countTime"}
+            rules={[{ required: true }]}
+          >
+          <Input  type= 'number'/>
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">

@@ -167,10 +167,10 @@ export default function CustomerPage() {
                 .join("\n"),
             });
           });
-          let wb = await loadData(
+          const wb = await loadData(
             "/TEMP_EXPORT.xlsx?v=" + new Date().getTime()
           );
-          let worksheet = wb.getWorksheet("data");
+          const worksheet = wb.getWorksheet("data");
           const BEGIN_INDEX_OF_FILE = 2;
           worksheet.insertRows(BEGIN_INDEX_OF_FILE + 1, data, "i+");
           worksheet.spliceRows(BEGIN_INDEX_OF_FILE, 1);

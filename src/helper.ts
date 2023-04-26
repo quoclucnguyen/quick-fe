@@ -41,8 +41,8 @@ export interface DistrictInterface extends AbstractEntity {
   name: string;
 }
 
-export const removeUserLogin = () => {
-  localStorage.removeItem("userLogin");
+export const removeUserLogin = async () => {
+  await localForage.removeItem(`${import.meta.env.VITE_APP_NAME}_user`);
 };
 
 export const loadData = async (url: string) => {
@@ -64,10 +64,10 @@ export const downloadFile = (wb: Excel.Workbook, fileName: string) => {
   wb.xlsx
     .writeBuffer()
     .then((buffer) => {
-      let blob = new Blob([buffer], {
+      const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;",
       });
-      let link = document.createElement("a");
+      const link = document.createElement("a");
       link.href = window.URL.createObjectURL(blob);
       link.download = fileName;
       document.body.appendChild(link);
