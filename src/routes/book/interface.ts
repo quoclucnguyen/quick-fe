@@ -4,7 +4,7 @@ export interface BookInterface {
   code: string;
   address: string;
 }
-interface Filter {
+export interface Filter {
   take: number;
   skip: number;
   name: string | null;

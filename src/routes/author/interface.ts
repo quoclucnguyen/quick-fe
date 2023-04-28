@@ -6,7 +6,7 @@ export interface AuthorInterface {
   ageNumber: number;
   countTime: number;
 }
-interface Filter {
+export interface Filter {
   take: number;
   skip: number;
   name: string | null;
