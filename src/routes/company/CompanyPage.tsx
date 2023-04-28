@@ -27,35 +27,32 @@ import { useApp } from "../../App";
 import { CURD } from "../../helper";
 import type { UploadProps } from "antd";
 import { RcFile } from "antd/lib/upload";
-import { AuthorInterface, Filter } from "./interface";
+import { CompanyInterface, Filter } from "./interface";
 import {
   formatFileToDownload,
   handleExcelTemplateClick,
   loadExcelData,
 } from "./excel";
 
-export default function AuthorPage() {
+export default function CompanyPage() {
   const app = useApp();
   const { Dragger } = Upload;
 
  const [filter, setFilter] = useState<Filter>({
     name: null,
     code: null,
-    address: null,
-    ageNumber: null,
-    countTime: null,
     take: 10,
     skip: 0,
   });
   const [isLoadingData, setLoading] = useState<boolean>();
-  const [data, setData] = useState<AuthorInterface[]>([]);
+  const [data, setData] = useState<CompanyInterface[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [isModalAddAuthorOpen, setIsModalAddAuthorOpen] = useState<boolean>(false);
+  const [isModalAddCompanyOpen, setIsModalAddCompanyOpen] = useState<boolean>(false);
   const [formAction, setFormAction] = useState<CURD | null>(null);
   const [modalTitle, setModalTitle] = useState<string>("");
-  const [addOrUpdateAuthorForm] = Form.useForm();
+  const [addOrUpdateCompanyForm] = Form.useForm();
   const [searchForm] = Form.useForm();
   const [isModalImportOpen, setIsModalImportOpen] = useState<boolean>(false);
   const [fileList, setFileList] = useState<RcFile[]>([]);
@@ -74,7 +71,7 @@ export default function AuthorPage() {
         reader.onload = async () => {
           const dataMap = await loadExcelData(reader);
           try {
-            await app.axiosPost<any, any>("/authors/import", { data: dataMap });
+            await app.axiosPost<any, any>("/companies/import", { data: dataMap });
             message.success("Import success");
             setIsModalImportOpen(false);
             fetchData(filter);
@@ -106,9 +103,9 @@ export default function AuthorPage() {
   const fetchData = useCallback(async (filter: Filter) => {
     setLoading(true);
     const response = await app.axiosGet<
-      { entities: AuthorInterface[]; count: number },
+      { entities: CompanyInterface[]; count: number },
       Filter
-    >("/authors", filter);
+    >("/companies", filter);
     if (Array.isArray(response)) {
       return;
     }
@@ -118,18 +115,18 @@ export default function AuthorPage() {
     setLoading(false);
   }, []);
 
-  const handleBtnEditAuthorClick = (record: AuthorInterface) => {
+  const handleBtnEditCompanyClick = (record: CompanyInterface) => {
     setFormAction(CURD.UPDATE);
-    setIsModalAddAuthorOpen(true);
-    setModalTitle(`Author edit: ${record.code} - ${record.name}`);
-    addOrUpdateAuthorForm.setFieldsValue(record);
+    setIsModalAddCompanyOpen(true);
+    setModalTitle(`Company edit: ${record.code} - ${record.name}`);
+    addOrUpdateCompanyForm.setFieldsValue(record);
   };
-  const handleDeleteAuthor = async (author: AuthorInterface) => {
+  const handleDeleteCompany = async (company: CompanyInterface) => {
     try {
-      await app.axiosDelete(`/authors/${author.id}`);
+      await app.axiosDelete(`/companies/${company.id}`);
       app.showAlert({
         type: "success",
-        message: "Author deleted successfully.",
+        message: "Company deleted successfully.",
       });
       fetchData(filter);
     } catch (error) {
@@ -137,22 +134,22 @@ export default function AuthorPage() {
     }
   };
 
-  const handleAddOrUpdateAuthorSubmit = async () => {
+  const handleAddOrUpdateCompanySubmit = async () => {
     try {
-      await addOrUpdateAuthorForm.validateFields();
-      const authorData = addOrUpdateAuthorForm.getFieldsValue();
-      const authorId = addOrUpdateAuthorForm.getFieldValue("id");
+      await addOrUpdateCompanyForm.validateFields();
+      const companyData = addOrUpdateCompanyForm.getFieldsValue();
+      const companyId = addOrUpdateCompanyForm.getFieldValue("id");
 
       switch (formAction) {
         case CURD.CREATE:
-          await app.axiosPost(`/authors`, authorData);
-          app.showAlert({ type: "success", message: "Add author success" });
+          await app.axiosPost(`/companies`, companyData);
+          app.showAlert({ type: "success", message: "Add company success" });
           break;
         case CURD.UPDATE:
-          await app.axiosPatch(`/authors/${authorId}`, authorData);
+          await app.axiosPatch(`/companies/${companyId}`, companyData);
           app.showAlert({
             type: "success",
-            message: "Update author success",
+            message: "Update company success",
           });
           break;
         default:
@@ -161,8 +158,8 @@ export default function AuthorPage() {
     } catch (error) {
       console.error(error);
     } finally {
-      addOrUpdateAuthorForm.resetFields();
-      setIsModalAddAuthorOpen(false);
+      addOrUpdateCompanyForm.resetFields();
+      setIsModalAddCompanyOpen(false);
       setModalTitle("");
       fetchData(filter);
     }
@@ -171,22 +168,19 @@ export default function AuthorPage() {
   const handleExcelButtonClick = async () => {
     setLoading(true);
     const searchValue = searchForm.getFieldsValue();
-    const authorList = await app.axiosGet<
-      { entities: AuthorInterface[]; count: number },
+    const companyList = await app.axiosGet<
+      { entities: CompanyInterface[]; count: number },
       Filter
-    >("/authors", {
+    >("/companies", {
       ...searchValue,
       take: 0,
       skip: 0,
     });
-    if (authorList && !Array.isArray(authorList)) {
-      const { entities } = authorList;
-      const data = entities.map((author: AuthorInterface) => [
-        author.name,
-        author.code,
-        author.address,
-        author.ageNumber,
-        author.count,
+    if (companyList && !Array.isArray(companyList)) {
+      const { entities } = companyList;
+      const data = entities.map((company: CompanyInterface) => [
+        company.name,
+        company.code,
       ]);
       await formatFileToDownload(data);
     }
@@ -215,21 +209,6 @@ export default function AuthorPage() {
               </Col>
               <Col>
                 <Form.Item label={"Code"} name={"code"}>
-                  <Input allowClear />
-                </Form.Item>
-              </Col>
-              <Col>
-                <Form.Item label={"Address"} name={"address"}>
-                  <Input allowClear />
-                </Form.Item>
-              </Col>
-              <Col>
-                <Form.Item label={"Age Number"} name={"agenumber"}>
-                  <Input allowClear />
-                </Form.Item>
-              </Col>
-              <Col>
-                <Form.Item label={"Count Times"} name={"count"}>
                   <Input allowClear />
                 </Form.Item>
               </Col>
@@ -269,10 +248,10 @@ export default function AuthorPage() {
               <Button
                 icon={<PlusCircleTwoTone twoToneColor="#52c41a" />}
                 onClick={async () => {
-                  setIsModalAddAuthorOpen(true);
+                  setIsModalAddCompanyOpen(true);
                   setFormAction(CURD.CREATE);
-                  setModalTitle("Add author");
-                  addOrUpdateAuthorForm.resetFields();
+                  setModalTitle("Add company");
+                  addOrUpdateCompanyForm.resetFields();
                 }}
               />
             </Col>
@@ -327,21 +306,6 @@ export default function AuthorPage() {
               dataIndex: "code",
             },
             {
-              title: "Address",
-              key: "address",
-              dataIndex: "address",
-            },
-            {
-              title: "Age Number",
-              key: "ageNumber",
-              dataIndex: "ageNumber",
-            },
-            {
-              title: "Count Times",
-              key: "countTime",
-              dataIndex: "countTime",
-            },
-            {
               render: (_, record) => {
                 return (
                   <Space>
@@ -349,13 +313,13 @@ export default function AuthorPage() {
                       type="link"
                       icon={<EditOutlined />}
                       onClick={() => {
-                        handleBtnEditAuthorClick(record);
+                        handleBtnEditCompanyClick(record);
                       }}
                     />
                     <Popconfirm
-                      title={`Delete author: ${record.code} - ${record.name}`}
+                      title={`Delete company: ${record.code} - ${record.name}`}
                       onConfirm={() => {
-                        handleDeleteAuthor(record);
+                        handleDeleteCompany(record);
                       }}
                       okText="Delete"
                     >
@@ -372,16 +336,16 @@ export default function AuthorPage() {
       {/* Modal add or update */}
       <Modal
         title={modalTitle}
-        open={isModalAddAuthorOpen}
+        open={isModalAddCompanyOpen}
         onCancel={() => {
-          setIsModalAddAuthorOpen(false);
+          setIsModalAddCompanyOpen(false);
         }}
         footer={false}
       >
         <Form
           layout={"vertical"}
-          onFinish={handleAddOrUpdateAuthorSubmit}
-          form={addOrUpdateAuthorForm}
+          onFinish={handleAddOrUpdateCompanySubmit}
+          form={addOrUpdateCompanyForm}
         >
           <Form.Item name={"id"} hidden={true}></Form.Item>
           <Form.Item
@@ -398,27 +362,6 @@ export default function AuthorPage() {
           >
           <Input />
           </Form.Item>
-          <Form.Item
-            label={"Address"}
-            name={"address"}
-            rules={[{ required: true }]}
-          >
-          <Input />
-          </Form.Item>
-          <Form.Item
-            label={"Age Number"}
-            name={"ageNumber"}
-            rules={[{ required: true }]}
-          >
-          <Input  type= 'number'/>
-          </Form.Item>
-          <Form.Item
-            label={"Count Times"}
-            name={"countTime"}
-            rules={[{ required: true }]}
-          >
-          <Input  type= 'number'/>
-          </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
               Save
@@ -429,7 +372,7 @@ export default function AuthorPage() {
 
       {/* Modal import via excel */}
       <Modal
-        title={"Import author"}
+        title={"Import company"}
         open={isModalImportOpen}
         onCancel={() => {
           setIsModalImportOpen(false);

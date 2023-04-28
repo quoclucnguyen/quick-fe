@@ -26,6 +26,7 @@ const DashboardPage = React.lazy(
 // protected region Add additional imports here end
 const BookPage = React.lazy(() => import("./routes/book/BookPage"));
 const AuthorPage = React.lazy(() => import("./routes/author/AuthorPage"));
+const CompanyPage = React.lazy(() => import("./routes/company/CompanyPage"));
 
 // protected region Add other code in here on begin
 export interface UserLogin {
@@ -327,22 +328,30 @@ function App() {
                 />
 // protected region Add other code in here end
 
-                <Route
-                  path={"book"}
-                  element={
-                    <RequireAuth>
-                      <BookPage />
-                    </RequireAuth>
-                  }
-                />
-                <Route
-                  path={"author"}
-                  element={
-                    <RequireAuth>
-                      <AuthorPage />
-                    </RequireAuth>
-                  }
-                />
+<Route
+  path={"book"}
+  element={
+    <RequireAuth>
+      <BookPage />
+    </RequireAuth>
+  }
+/>
+<Route
+  path={"author"}
+  element={
+    <RequireAuth>
+      <AuthorPage />
+    </RequireAuth>
+  }
+/>
+<Route
+  path={"company"}
+  element={
+    <RequireAuth>
+      <CompanyPage />
+    </RequireAuth>
+  }
+/>
 
 // protected region Add end code in here on begin
               </Route>

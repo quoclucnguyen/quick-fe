@@ -37,7 +37,7 @@ const MainLayout = () => {
       title: "Bạn có chắc chắn muốn đăng xuất?",
       onOk: async () => {
         await removeUserLogin();
-        navigate('/login');
+        navigate("/login");
       },
       okText: "Đăng xuất",
       cancelText: "Hủy",
@@ -78,8 +78,13 @@ const MainLayout = () => {
               icon: <RightSquareOutlined />,
               label: "Authors",
             },
+            {
+              key: "/company",
+              icon: <RightSquareOutlined />,
+              label: "Companies",
+            },
 
-            // protected region Add end code in here on begin
+// protected region Add end code in here on begin
           ]}
         />
       </Sider>
@@ -101,8 +106,8 @@ const MainLayout = () => {
         <Content
           className="site-layout-background"
           style={{
-            margin: "24px 16px",
-            padding: 24,
+            margin: "1rem",
+            padding: "0rem",
             minHeight: 280,
           }}
         >

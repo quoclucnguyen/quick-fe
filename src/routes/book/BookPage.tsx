@@ -1,12 +1,12 @@
 import {
   DeleteFilled,
   EditOutlined,
-  PlusCircleOutlined,
   SearchOutlined,
   ExportOutlined,
-  ImportOutlined,
   DownloadOutlined,
   InboxOutlined,
+  PlusCircleTwoTone,
+  FileExcelTwoTone,
 } from "@ant-design/icons";
 import { Card } from "@nextui-org/react";
 import {
@@ -24,40 +24,21 @@ import {
 } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useApp } from "../../App";
-import { CURD, downloadFile, numToCol } from "../../helper";
-import Excel from 'exceljs';
-import type { UploadProps } from 'antd';
+import { CURD } from "../../helper";
+import type { UploadProps } from "antd";
 import { RcFile } from "antd/lib/upload";
-
-export interface BookInterface {
-  id: number;
-  name: string;
-  code: string;
-  address: string;
-}
-interface Filter {
-  take: number;
-  skip: number;
-  name: string | null;
-  code: string | null;
-  address: string | null;
-}
-export enum ExcelImportHeader {
-  name = 'Tên',
-  code = 'Code',
-  address = 'Address',
-}
-export const HeaderToParam = {
-  [ExcelImportHeader.name.toString()]: 'name',
-  [ExcelImportHeader.code.toString()]: 'code',
-  [ExcelImportHeader.address.toString()]: 'address',
-}
+import { BookInterface, Filter } from "./interface";
+import {
+  formatFileToDownload,
+  handleExcelTemplateClick,
+  loadExcelData,
+} from "./excel";
 
 export default function BookPage() {
   const app = useApp();
   const { Dragger } = Upload;
 
-  const [filter, setFilter] = useState<Filter>({
+ const [filter, setFilter] = useState<Filter>({
     name: null,
     code: null,
     address: null,
@@ -69,8 +50,7 @@ export default function BookPage() {
   const [total, setTotal] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
-  const [isModalAddBookOpen, setIsModalAddBookOpen] =
-    useState<boolean>(false);
+  const [isModalAddBookOpen, setIsModalAddBookOpen] = useState<boolean>(false);
   const [formAction, setFormAction] = useState<CURD | null>(null);
   const [modalTitle, setModalTitle] = useState<string>("");
   const [addOrUpdateBookForm] = Form.useForm();
@@ -78,47 +58,32 @@ export default function BookPage() {
   const [isModalImportOpen, setIsModalImportOpen] = useState<boolean>(false);
   const [fileList, setFileList] = useState<RcFile[]>([]);
 
-  const uploadFileProps: UploadProps = useMemo(() => ({
-    name: 'file',
-    multiple: false,
-    fileList: fileList,
-    accept: 'xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    beforeUpload(file: RcFile) {
-      setFileList([...fileList, file]);
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(file);
-      reader.onload = async () => {
-        const workbook = new Excel.Workbook();
-        await workbook.xlsx.load(reader.result as unknown as any);
-        const worksheet = workbook.getWorksheet('data');
-        let headers: any[] | undefined = [];
-        const data: any[] = [];
-        worksheet.eachRow((row, rowNumber) => {
-          if (rowNumber === 1) {
-            headers = row?.model?.cells?.map(cell => cell?.value?.toString().trim());
-          } else {
-            data.push(row?.model?.cells?.map(cell => cell?.value?.toString().trim()));
+  const uploadFileProps: UploadProps = useMemo(
+    () => ({
+      name: "file",
+      multiple: false,
+      fileList: fileList,
+      accept:
+        "xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      beforeUpload(file: RcFile) {
+        setFileList([...fileList, file]);
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = async () => {
+          const dataMap = await loadExcelData(reader);
+          try {
+            await app.axiosPost<any, any>("/books/import", { data: dataMap });
+            message.success("Import success");
+            setIsModalImportOpen(false);
+            fetchData(filter);
+          } catch {
+            message.error("Import failed");
           }
-        });
-        const dataMap = data.map((row: string[]) => {
-          const obj = {} as any;
-          headers?.forEach((header: string, index) => {
-            const key = HeaderToParam[header];
-            obj[key] = row[index];
-          });
-          return obj;
-        });
-        try {
-          await app.axiosPost<any, any>("/books/import", { data: dataMap });
-          message.success("Import thành công");
-          setIsModalImportOpen(false);
-          fetchData(filter);
-        } catch {
-          message.error("Import thất bại");
-        }
-      }
-    }
-  }), [fileList]);
+        };
+      },
+    }),
+    [fileList]
+  );
 
   const handleSearch = (searchValues: {
     name?: string;
@@ -154,7 +119,7 @@ export default function BookPage() {
   const handleBtnEditBookClick = (record: BookInterface) => {
     setFormAction(CURD.UPDATE);
     setIsModalAddBookOpen(true);
-    setModalTitle(`Cập nhật thông tin Book: ${record.code} - ${record.name}`);
+    setModalTitle(`Book edit: ${record.code} - ${record.name}`);
     addOrUpdateBookForm.setFieldsValue(record);
   };
   const handleDeleteBook = async (book: BookInterface) => {
@@ -204,14 +169,14 @@ export default function BookPage() {
   const handleExcelButtonClick = async () => {
     setLoading(true);
     const searchValue = searchForm.getFieldsValue();
-    const bookList = await app.axiosGet<{ entities: BookInterface[], count: number }, Filter>(
-      "/books",
-      {
-        ...searchValue,
-        take: 0,
-        skip: 0,
-      }
-    );
+    const bookList = await app.axiosGet<
+      { entities: BookInterface[]; count: number },
+      Filter
+    >("/books", {
+      ...searchValue,
+      take: 0,
+      skip: 0,
+    });
     if (bookList && !Array.isArray(bookList)) {
       const { entities } = bookList;
       const data = entities.map((book: BookInterface) => [
@@ -219,97 +184,9 @@ export default function BookPage() {
         book.code,
         book.address,
       ]);
-      const workbook = new Excel.Workbook();
-      const worksheet = workbook.addWorksheet("data", {});
-      const headers = [
-        "Tên",
-        "Code",
-        "Address",
-      ];
-      const formatHeader = (cell: Excel.Cell) => {
-        cell.style = {
-          font: { size: 14 },
-          border: {
-            bottom: { style: "thin" },
-            left: { style: "thin" },
-            right: { style: "thin" },
-            top: { style: "thin" },
-          },
-          fill: {
-            type: "pattern",
-            pattern: "solid",
-            fgColor: { argb: "99ccff" },
-          },
-        };
-      };
-
-      headers.forEach((header, index) => {
-        const cell = worksheet.getCell(`${numToCol(index + 1)}1`);
-        cell.value = header;
-        formatHeader(cell);
-      });
-
-      const formatCell = (cell: Excel.Cell) => {
-        cell.border = {
-          bottom: { style: "thin" },
-          left: { style: "thin" },
-          right: { style: "thin" },
-          top: { style: "thin" },
-        };
-      };
-
-      headers.forEach((_, index) => {
-        const cell = worksheet.getCell(`${numToCol(index + 1)}2`);
-        formatCell(cell);
-      });
-      const BEGIN_INDEX_OF_FILE = 2;
-      worksheet.insertRows(BEGIN_INDEX_OF_FILE + 1, data, "i+");
-      worksheet.spliceRows(BEGIN_INDEX_OF_FILE, 1);
-      await downloadFile(workbook, "DS_Book_" + new Date().getTime() + ".xlsx");
+      await formatFileToDownload(data);
     }
     setLoading(false);
-  }
-
-
-  /**
-   * Generates and downloads an Excel file template with specified headers.
-   */
-  const handleExcelTemplateClick = async () => {
-    const workbook = new Excel.Workbook();
-    const worksheet = workbook.addWorksheet("data", {});
-    const headers = [
-      "Name",
-      "Code",
-      "Address",
-    ];
-    headers.forEach((header, index) => {
-      const cell = worksheet.getCell(`${numToCol(index + 1)}1`);
-      cell.value = header;
-      cell.style = {
-        font: { size: 14 },
-        border: {
-          bottom: { style: "thin" },
-          left: { style: "thin" },
-          right: { style: "thin" },
-          top: { style: "thin" },
-        },
-        fill: {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "99ccff" },
-        },
-      };
-    });
-    headers.forEach((_, index) => {
-      const cell = worksheet.getCell(`${numToCol(index + 1)}2`);
-      cell.border = {
-        bottom: { style: "thin" },
-        left: { style: "thin" },
-        right: { style: "thin" },
-        top: { style: "thin" },
-      };
-    });
-    await downloadFile(workbook, `IMPORT_Book_${new Date().getTime()}.xlsx`);
   };
 
   useEffect(() => {
@@ -318,7 +195,7 @@ export default function BookPage() {
 
   return (
     <>
-      <Card css={{ padding: "1rem 1rem 0rem 1rem" }}>
+      <Card css={{ padding: "0.5rem 1rem" }}>
         <Form
           layout={"vertical"}
           onFinish={handleSearch}
@@ -342,7 +219,6 @@ export default function BookPage() {
                   <Input allowClear />
                 </Form.Item>
               </Col>
-
               <Col>
                 <Form.Item label={" "}>
                   <Button
@@ -356,18 +232,14 @@ export default function BookPage() {
               <Col>
                 <Form.Item label={" "}>
                   <Popconfirm
-                    title={'Xuất Excel theo tiêu chí đã chọn?'}
+                    title={"Export excel?"}
                     onConfirm={handleExcelButtonClick}
-                    okText="Có"
-                    cancelText="Không"
                     okButtonProps={{ loading: isLoadingData }}
                   >
                     <Button
                       icon={<ExportOutlined />}
                       loading={isLoadingData}
-                    >
-                      Xuất Excel
-                    </Button>
+                    ></Button>
                   </Popconfirm>
                 </Form.Item>
               </Col>
@@ -375,34 +247,32 @@ export default function BookPage() {
           </Row>
         </Form>
       </Card>
-      <br />
-      <Card css={{ padding: "1rem 1rem 0rem 1rem" }}>
-        <Row justify={"end"}>
+
+      <Card css={{ padding: "0.5rem 1rem", marginTop: "0.5rem" }}>
+        <Row justify={"end"} style={{ marginBottom: "0.5rem" }}>
           <Space>
             <Col>
               <Button
-                icon={<PlusCircleOutlined />}
+                icon={<PlusCircleTwoTone twoToneColor="#52c41a" />}
                 onClick={async () => {
                   setIsModalAddBookOpen(true);
                   setFormAction(CURD.CREATE);
-                  setModalTitle("Thêm Book");
+                  setModalTitle("Add book");
                   addOrUpdateBookForm.resetFields();
                 }}
-              >
-                Thêm Book
-              </Button>
+              />
             </Col>
             <Col>
               <Button
-                icon={<ImportOutlined />}
-                onClick={() => { setIsModalImportOpen(true); setFileList([]); }}
-              >
-                Import Book
-              </Button>
+                icon={<FileExcelTwoTone twoToneColor="#52c41a" />}
+                onClick={() => {
+                  setIsModalImportOpen(true);
+                  setFileList([]);
+                }}
+              />
             </Col>
           </Space>
         </Row>
-        <br />
         <Table
           bordered
           rowKey={"id"}
@@ -428,7 +298,7 @@ export default function BookPage() {
               title: "#",
               align: "center",
               width: "15px",
-              render: (item, record, index) => {
+              render: (_item, _record, index) => {
                 return (currentPage - 1) * pageSize + index + 1;
               },
             },
@@ -452,20 +322,20 @@ export default function BookPage() {
                 return (
                   <Space>
                     <Button
+                      type="link"
                       icon={<EditOutlined />}
                       onClick={() => {
                         handleBtnEditBookClick(record);
                       }}
                     />
                     <Popconfirm
-                      title={`Xóa Book: ${record.code} - ${record.name}`}
+                      title={`Delete book: ${record.code} - ${record.name}`}
                       onConfirm={() => {
                         handleDeleteBook(record);
                       }}
-                      okText="Xóa"
-                      cancelText="Hủy"
+                      okText="Delete"
                     >
-                      <Button icon={<DeleteFilled />} danger />
+                      <Button type="link" icon={<DeleteFilled />} danger />
                     </Popconfirm>
                   </Space>
                 );
@@ -495,25 +365,25 @@ export default function BookPage() {
             name={"name"}
             rules={[{ required: true }]}
           >
-            <Input />
+          <Input />
           </Form.Item>
           <Form.Item
             label={"Code"}
             name={"code"}
             rules={[{ required: true }]}
           >
-            <Input />
+          <Input />
           </Form.Item>
           <Form.Item
             label={"Address"}
             name={"address"}
             rules={[{ required: true }]}
           >
-            <Input />
+          <Input />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
-              Lưu
+              Save
             </Button>
           </Form.Item>
         </Form>
@@ -521,21 +391,36 @@ export default function BookPage() {
 
       {/* Modal import via excel */}
       <Modal
-        title={'Import Book'}
+        title={"Import book"}
         open={isModalImportOpen}
-        onCancel={() => { setIsModalImportOpen(false) }}
+        onCancel={() => {
+          setIsModalImportOpen(false);
+        }}
         footer={false}
       >
-        <p>Tải template <Button onClick={handleExcelTemplateClick} type={'link'} icon={<DownloadOutlined />}>tại đây </Button></p>
+        <p>
+          Template{" "}
+          <Button
+            onClick={handleExcelTemplateClick}
+            type={"link"}
+            icon={<DownloadOutlined />}
+          >
+            here{" "}
+          </Button>
+        </p>
         <br />
         <Dragger {...uploadFileProps}>
           <p className="ant-upload-drag-icon">
             <InboxOutlined />
           </p>
-          <p className="ant-upload-text">Chọn hoặc kéo file vào khu vực này để import</p>
+          <p className="ant-upload-text">Select or drag to import</p>
         </Dragger>
       </Modal>
     </>
   );
 }
+
+
+
+
 
