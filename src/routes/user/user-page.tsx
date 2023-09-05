@@ -5,7 +5,6 @@ import {
   PlusCircleOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
-import { Card } from "@nextui-org/react";
 import {
   Form,
   Input,
@@ -19,10 +18,10 @@ import {
   Space,
   Tag,
   Popconfirm,
+  Card,
 } from "antd";
 import { useEffect, useState } from "react";
 import { useApp } from "../../App";
-// import { faker } from "@faker-js/faker";
 
 interface User {
   id: number;
@@ -173,7 +172,7 @@ export default function UserPage() {
 
   return (
     <>
-      <Card css={{ padding: "1rem 1rem 0rem 1rem" }}>
+      <Card>
         <Form
           layout={"vertical"}
           onFinish={handleSearch}
@@ -207,7 +206,7 @@ export default function UserPage() {
         </Form>
       </Card>
       <br />
-      <Card css={{ padding: "1rem" }}>
+      <Card>
         <Row justify={"end"}>
           <Col>
             <Button
