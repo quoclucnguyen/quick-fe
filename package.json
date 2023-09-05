@@ -11,33 +11,31 @@
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.0.1",
-    "@faker-js/faker": "^7.6.0",
-    "@nextui-org/react": "^1.0.0-beta.12",
-    "antd": "^5.4.5",
-    "axios": "^1.3.6",
-    "dayjs": "^1.11.7",
+    "@ant-design/icons": "^5.2.6",
+    "antd": "^5.8.6",
+    "axios": "^1.5.0",
+    "dayjs": "^1.11.9",
     "exceljs": "^4.3.0",
     "jwt-decode": "^3.1.2",
     "localforage": "^1.10.0",
     "match-sorter": "^6.3.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.10.0",
-    "sort-by": "^0.0.2",
-    "sort-by-typescript": "^1.2.3"
+    "react-router-dom": "^6.15.0",
+    "sort-by": "^1.2.0",
+    "sort-by-typescript": "^1.2.5"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.1",
-    "@typescript-eslint/eslint-plugin": "^5.59.0",
-    "@typescript-eslint/parser": "^5.59.0",
-    "@vitejs/plugin-react": "^4.0.0",
-    "@vitejs/plugin-react-swc": "^3.3.0",
-    "eslint": "^8.38.0",
+    "@types/react": "^18.2.21",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.6.0",
+    "@typescript-eslint/parser": "^6.6.0",
+    "@vitejs/plugin-react": "^4.0.4",
+    "@vitejs/plugin-react-swc": "^3.3.2",
+    "eslint": "^8.48.0",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.3.4",
-    "typescript": "^5.0.4",
-    "vite": "^4.3.2"
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "typescript": "^5.2.2",
+    "vite": "^4.4.9"
   }
 }

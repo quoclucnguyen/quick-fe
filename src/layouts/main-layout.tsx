@@ -68,22 +68,6 @@ const MainLayout = () => {
             },
             // protected region Add other code in here end
 
-            {
-              key: "/book",
-              icon: <RightSquareOutlined />,
-              label: "Books",
-            },
-            {
-              key: "/author",
-              icon: <RightSquareOutlined />,
-              label: "Authors",
-            },
-            {
-              key: "/company",
-              icon: <RightSquareOutlined />,
-              label: "Companies",
-            },
-
 // protected region Add end code in here on begin
           ]}
         />
