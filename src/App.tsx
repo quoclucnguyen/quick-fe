@@ -1,5 +1,7 @@
-// protected region Add additional imports here on begin
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {Modal} from "antd";
+import axios, {AxiosError, AxiosInstance} from "axios";
+import localforage from "localforage";
+import React, {createContext, useCallback, useContext, useEffect, useMemo, useState} from "react";
 import {
   BrowserRouter,
   Navigate,
@@ -8,12 +10,9 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import MainLayout from "./layouts/main-layout";
+import {getUserLogin, removeUserLogin} from "./helper";
 import LoginLayout from "./layouts/login-layout";
-import { getUserLogin, removeUserLogin } from "./helper";
-import axios, { AxiosError, AxiosInstance } from "axios";
-import { Modal } from "antd";
-import localforage from "localforage";
+import MainLayout from "./layouts/main-layout";
 
 const ErrorPage = React.lazy(() => import("./ErrorPage"));
 const UserPage = React.lazy(() => import("./routes/user/user-page"));
@@ -21,9 +20,9 @@ const LoginPage = React.lazy(() => import("./routes/login/login-page"));
 const DashboardPage = React.lazy(
   () => import("./routes/dashboard/dashboard-page")
 );
-// protected region Add additional imports here end
 
-// protected region Add other code in here on begin
+
+
 export interface UserLogin {
   id: number;
   username: string;
@@ -54,7 +53,7 @@ const authProvider = {
   },
 };
 
-function AuthProvider({ children }: { children: React.ReactNode }) {
+function AuthProvider({children}: {children: React.ReactNode}) {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserLogin | null | undefined>(undefined);
 
@@ -87,7 +86,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     getUserLoginFromLocal();
   }, []);
 
-  const authContextValue = { user, signin, signout };
+  const authContextValue = {user, signin, signout};
   if (user !== undefined) {
     return (
       <AuthContext.Provider value={authContextValue}>
@@ -104,12 +103,12 @@ export function useAuth() {
 
 const AuthContext = createContext<AuthContextType>(null!);
 
-function RequireAuth({ children }: { children: JSX.Element }) {
+function RequireAuth({children}: {children: JSX.Element}) {
   let auth = useAuth();
   let location = useLocation();
 
   if (!auth.user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{from: location}} replace />;
   }
 
   return children;
@@ -133,7 +132,7 @@ export const useApp = () => {
   return useContext(AppContext);
 };
 
-const AppProvider = ({ children }: { children: React.ReactNode }) => {
+const AppProvider = ({children}: {children: React.ReactNode}) => {
   const [modal, contextHolder] = Modal.useModal();
   const auth = useAuth();
   const userLogin = auth.user;
@@ -141,7 +140,7 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
     () =>
       axios.create({
         baseURL: import.meta.env.VITE_API_URL,
-        headers: { Authorization: `Bearer ${userLogin?.token}` },
+        headers: {Authorization: `Bearer ${userLogin?.token}`},
       }),
     [userLogin]
   );
@@ -209,7 +208,7 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const axiosGet = useCallback(
     function <E, P>(url: string, params: P): Promise<E> {
       return axiosInsance
-        .get<E>(url, { params: params })
+        .get<E>(url, {params: params})
         .then((result) => {
           return result.data;
         })
@@ -272,7 +271,7 @@ const AppProvider = ({ children }: { children: React.ReactNode }) => {
     </AppContext.Provider>
   );
 };
-// [END][App Context]
+
 
 function App() {
   return (
@@ -305,11 +304,11 @@ function App() {
                     </RequireAuth>
                   }
                 />
-              
-// protected region Add other code in here end
 
 
-// protected region Add end code in here on begin
+
+
+
               </Route>
             </Routes>
           </React.Suspense>
@@ -320,4 +319,3 @@ function App() {
 }
 
 export default App;
-// protected region Add end code in here end
